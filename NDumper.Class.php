@@ -1,13 +1,15 @@
 <?php
 /**
  * @author Egor Spivac. golden13@gmail.com
+ *
+ * Feel free to use code
+ * 
  */
 
-
 /**
- * Simplifying method/ Modified Var dump. Very nice and smart :)
+ * Simplifying method. Modified var_dump. Very nice and smart :)
  *
- * @param mixted $value variables
+ * @param mix $value variables
  */
 function vd()
 {
@@ -43,7 +45,7 @@ $NVDUMPER_TEMPLATES = array(
                         '.dbgBlock P {font-size:8pt;color:#222222;}
                         .dbgBlock DIV {border:solid 2px #FFFFFF;}
                         .dbgBlock DIV:hover {border:solid 2px #F5F5F5;}
-                       </style>',
+                      </style>',
 
 
     'main-functions' => '<script language="JavaScript">
@@ -68,7 +70,7 @@ $NVDUMPER_TEMPLATES = array(
 
     'first-level-block' => '<div class="dbgBlock">
                             <a class="m" href="#" onclick="JavaScript:dshdbg(\'{blockId}\', \'{linkId}\');">{name} ({type}) {size}
-                            <span id="{linkId}">['.(($NDUMPER_CONFIG['expanded'])? '-' : '+') . ']</span></a>
+                            <span id="{linkId}">[' . (($NDUMPER_CONFIG['expanded'])? '-' : '+') . ']</span></a>
                             <div id="{blockId}">
                             <pre> {content}
                                 <p class="t">{trace}</p>
@@ -79,7 +81,6 @@ $NVDUMPER_TEMPLATES = array(
 
 /**
  * Dumper class
- *
  */
 class NDUMPER
 {
@@ -119,7 +120,8 @@ class NDUMPER
     }
 
     /**
-     * Nice var dump.
+     * Nice var_dump.
+     * @global $NVDUMPER_TEMPLATES
      * @param mix $value variable
      *
      */
@@ -159,7 +161,7 @@ class NDUMPER
     }
 
     /**
-     * Build ids for block and + label
+     * Build id's for block and '+' label
      * @param bool $increment
      *
      * @return array
@@ -210,8 +212,9 @@ class NDUMPER
 
     /**
      * Build one var block.
-     * @param     $arr
-     * @param int $level
+     * @global $NDUMPER_CONFIG
+     * @param array $arr
+     * @param int   $level
      *
      * @return string
      */
@@ -275,7 +278,7 @@ class NDUMPER
                 $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".(($NDUMPER_CONFIG['expanded'])? '-' : '+') . "]</span></a>\n";
                 $str .= "<div id=\"{$ids['block']}\">";
                 foreach ($arr as $key => $value) {
-                    $str .= '<span class="k">'.$key.'</span>';//self::_getVarContent($key, $level2);
+                    $str .= '<span class="k">'.$key.'</span>';
                     $str .= ' => ';
                     $str .= self::_getVarContent($value, $level2) . "\n";
                 }
@@ -290,7 +293,7 @@ class NDUMPER
                 $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".(($NDUMPER_CONFIG['expanded'])? '-' : '+') . "]</span></a>\n";
                 $str .= "<div id=\"{$ids['block']}\">";
                 foreach ($arr as $key => $value) {
-                    $str .= '<span class="ok">'.$key.'</span>';//self::_getVarContent($key, $level2);
+                    $str .= '<span class="ok">'.$key.'</span>';
                     $str .= ' => ';
                     $str .= self::_getVarContent($value, $level2) . "\n";
                 }
@@ -304,5 +307,6 @@ class NDUMPER
         }
         return $str;
     }
-
 }
+
+// This is the end, my beautiful friend
