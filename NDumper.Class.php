@@ -3,7 +3,7 @@
  * @author Egor Spivac. golden13@gmail.com
  *
  * Feel free to use code
- * 
+ *
  */
 
 /**
@@ -38,7 +38,7 @@ $NVDUMPER_TEMPLATES = array(
                         .dbgBlock .ok {color:#000000;}
                         .dbgBlock {border:solid 1px #CCCCCC!important;padding:10px!important;font-size:9pt!important;background-color:#FFFFFF!important;color:#000000!important;}
                         .dbgBlock PRE {border:none;background-color:inherit;}
-                        .dbgBlock .m{display:block;width:auto;background-color:#585858;color:#dcf356;padding:2px;}
+                        .dbgBlock .m{display:block;width:auto;background-color:#585858;color:#dcf356;padding:5px;font-size:10pt;height:20px;font-weight:bold;font-family:Arial;}
                         .dbgBlock A {display:inline;background-color:#FFFFFF;color:blue;}
                         .dbgBlock DIV {margin-left:20px;display:' .
                         (($NDUMPER_CONFIG['expanded'])? 'block' : 'none') . '}' .
@@ -73,8 +73,7 @@ $NVDUMPER_TEMPLATES = array(
                             <span id="{linkId}">[' . (($NDUMPER_CONFIG['expanded'])? '-' : '+') . ']</span></a>
                             <div id="{blockId}">
                             <pre> {content}
-                                <p class="t">{trace}</p>
-                            </pre></div>
+                                <div class="t">{trace}</div></pre></div>
                             </div>'
 );
 
@@ -202,7 +201,7 @@ class NDUMPER
                 $trace_text .=
                     ($n++) . '. ' . $bs .
                         ((isset($v['class']))? 'class ' . $v['class'] . '->' : '') . $v['function'] . " in " .
-                        ((isset($v['file']))? $v['file'] . ' (' . $v['line'] . ')' : '') . $be . '<br>';
+                        ((isset($v['file']))? $v['file'] . ' (' . $v['line'] . ')' : '') . $be . "\n";
             }
             $trace_text = "<b>Trace:</b>\n" . $trace_text;
         }
