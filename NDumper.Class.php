@@ -2,7 +2,7 @@
 /**
  * @author Egor Spivac. golden13@gmail.com
  *
- * Feel free to use code
+ * Feel free to use code :)
  *
  */
 
@@ -24,9 +24,9 @@ function vd()
 // Configuration
 $NDUMPER_LIB_CONSTRUCTOR = array(
     'config' => array(
-        'expanded' => true, // Show all levels expanded
-        'recursion.limit' => 7, // Limit of recursion levels (For Symfony2 use less than 15 :) )
-        'items.limit' => 100, // Limit for items. Not works now. Will be added in next commit
+        'expanded'        => true, // Show all levels expanded
+        'recursion.limit' => 7,    // Limit of recursion levels (For Symfony2 use less than 15 :) )
+        'items.limit'     => 100,  // Limit for items. Not works now. Will be added in next commit
     ),
 
     // Variable = {{varname}} will be replaced by values
@@ -101,6 +101,8 @@ class NDUMPER
 
     private static $_localCounter = 0;
 
+    private static $_itemsCount = 0;
+
     /**
      * Nice var_dump.
      *
@@ -162,8 +164,6 @@ class NDUMPER
      */
     private static function _getJson($string)
     {
-        //$isJson = !preg_match('/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/',
-        //    preg_replace('/"(\.|[^"\])*"/g', '', $string));
         //TODO: modify for better performance
         $data = json_decode($string);
         $isJson = false;
@@ -174,25 +174,6 @@ class NDUMPER
             'result' => $isJson,
             'data'   => $data
         );
-
-        /*
-        if (function_exists('json_last_error') && function_exists('json_decode')) {
-            if (trim($string)==='') {
-                $data = '';
-            } else {
-                $data = json_decode($string);
-            }
-            echo $string;
-            return array(
-                'result' => (json_last_error() == JSON_ERROR_NONE),
-                'data'   => $data,
-            );
-        } else {
-            return array(
-                'result' => false,
-                'data'   => array(),
-            );
-        }*/
     }
 
     /**
@@ -294,6 +275,12 @@ class NDUMPER
     {
         $str = '';
         $level2 = $level + 1;
+
+        self::$_itemsCount++;
+        if (self::$_config['items.limit'] !== 0 && self::$_itemsCount > self::$_config['items.limit']) {
+            $str .= '...items count limit (' . self::$_config['items.limit'] . ') reached...';
+            return $str;
+        }
 
         // limit of recursion
         if ($level > self::$_config['recursion.limit']) {
@@ -434,4 +421,4 @@ class NDUMPER
     }
 }
 
-// This is the end, my beautiful friend
+// This is the end. Param param pam! Piiuu!
