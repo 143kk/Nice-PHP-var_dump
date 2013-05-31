@@ -26,7 +26,7 @@ $NDUMPER_LIB_CONSTRUCTOR = array(
     'config' => array(
         'expanded'        => true, // Show all levels expanded
         'recursion.limit' => 7,    // Limit of recursion levels (For Symfony2 use less than 15 :) )
-        'items.limit'     => 100,  // Limit for items. Not works now. Will be added in next commit
+        'items.limit'     => 1000,  // Limit for items. Not works now. Will be added in next commit. 0 - without limit
     ),
 
     // Variable = {{varname}} will be replaced by values
@@ -40,13 +40,13 @@ $NDUMPER_LIB_CONSTRUCTOR = array(
                             .dbgBlock .ok {color:#000000;}
                             .dbgBlock .em {font-style:italic;color:#CCCCCC;}
                             .dbgBlock .n {font-style:italic;color:#CCCCCC;}
-                            .dbgBlock {border:solid 1px #CCCCCC!important;padding:10px!important;font-size:9pt!important;background-color:#FFFFFF!important;color:#000000!important;font-weight:normal;}
-                            .dbgBlock PRE {border:none;background-color:inherit;white-space:pre;font-weight:normal;}
-                            .dbgBlock .m{display:block;width:auto;background-color:#585858;color:#dcf356;padding:5px;font-size:10pt;height:20px;font-weight:bold;font-family:Arial;}
-                            .dbgBlock A {display:inline;background-color:#FFFFFF;color:blue;}
+                            .dbgBlock {border-radius: 0px 5px 5px 5px;border:solid 1px #006582!important;margin:10px!important;padding:1px!important;font-size:9pt!important;background-color:#FFFFFF!important;color:#000000!important;font-weight:normal;}
+                            .dbgBlock PRE {border:none;background-color:inherit;white-space:pre;font-weight:normal;box-shadow: none;font-size:9pt!important;}
+                            .dbgBlock .m{display:block;width:auto;background-color:#006582;color:#FFFFFF;padding: 7px 5px 5px 5px;font-size:9pt;height:30px;font-family:Arial;text-shadow: 0 1px 0 #2BA6CB;}
+                            .dbgBlock A {display:inline;background-color:#FFFFFF;color:blue;font-size:9pt;}
                             .dbgBlock DIV {margin-left:20px;display:{{hideShow}}}
                             .dbgBlock P {font-size:8pt;color:#222222;}
-                            .dbgBlock DIV {border:solid 2px #FFFFFF;}
+                            .dbgBlock DIV {border:solid 2px #FFFFFF;font-size:9pt;}
                             .dbgBlock DIV:hover {border:solid 2px #F5F5F5;}
                            </style>',
 
@@ -103,6 +103,8 @@ class NDUMPER
 
     private static $_itemsCount = 0;
 
+    private static $_break = false;
+
     /**
      * Nice var_dump.
      *
@@ -126,7 +128,8 @@ class NDUMPER
         $result = '';
 
         self::$_localCounter++;
-
+        self::$_itemsCount = 0;
+        
         if (self::$_localCounter == 1) {
             $result .= self::$_templates['global.styles'];
             $result .= self::$_templates['global.js'];
@@ -278,6 +281,7 @@ class NDUMPER
 
         self::$_itemsCount++;
         if (self::$_config['items.limit'] !== 0 && self::$_itemsCount > self::$_config['items.limit']) {
+            self::$_break = true;
             $str .= '...items count limit (' . self::$_config['items.limit'] . ') reached...';
             return $str;
         }
@@ -333,6 +337,7 @@ class NDUMPER
                         $str .= '<span class="k">'.$key.'</span>';
                         $str .= ' => ';
                         $str .= self::_getVarContent($value, $level2) . "\n";
+                        if (self::$_break) break;
                     }
                     $str .= "</div>";
                     $str .= "}";
@@ -383,6 +388,7 @@ class NDUMPER
                     $str .= '<span class="k">'.$key.'</span>';
                     $str .= ' => ';
                     $str .= self::_getVarContent($value, $level2) . "\n";
+                    if (self::$_break) break;
                 }
                 $str .= "</div>";
                 $str .= "}";
@@ -406,6 +412,7 @@ class NDUMPER
                     $str .= '<span class="ok">'.$key.'</span>';
                     $str .= ' => ';
                     $str .= self::_getVarContent($value, $level2) . "\n";
+                    if (self::$_break) break;
                 }
                 $str .= "</div>";
                 $str .= "}\n";
