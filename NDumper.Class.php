@@ -164,7 +164,7 @@ class NDUMPER
         if ($type == 'object') {
             $classInfo = self::_getClassInfo($value);
             $type .= ' = ' . $classInfo['fullName'] . ', methods=' . $classInfo['methodsAllCount'];
-            $size = 
+            $size = $classInfo['methodsAllCount'];
         }
         if ($type == 'array'){
             $size = count($value);
