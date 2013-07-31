@@ -26,7 +26,7 @@ $NDUMPER_LIB_CONSTRUCTOR = array(
     'config' => array(
         'expanded'        => true, // Show all levels expanded
         'recursion.limit' => 7,    // Limit of recursion levels (For Symfony2 use less than 15 :) )
-        'items.limit'     => 1000,  // Limit for items. Not works now. Will be added in next commit. 0 - without limit
+        'items.limit'     => 1000, // Limit for items. Not works now. Will be added in next commit. 0 - without limit
     ),
 
     // Variable = {{varname}} will be replaced by values
@@ -99,12 +99,30 @@ class NDUMPER
     // config
     private static $_config = array();
 
+    // users Config
+    private static $_userConfig = array();
+
     private static $_localCounter = 0;
 
     private static $_itemsCount = 0;
 
     private static $_break = false;
 
+    public static function set($name, $value)
+    {
+        self::$_userConfig[$name] = $value;
+    }
+    
+    /**
+    * Get parameter from userConfig or config
+    */
+    public static function _get($name)
+    {
+        if (isset(self::$_userConfig[$name])) return self::$_userConfig[$name];
+        if (isset(self::$_config[$name])) return self::$_config[$name];
+        return null;
+    }
+    
     /**
      * Nice var_dump.
      *
@@ -119,8 +137,9 @@ class NDUMPER
         self::$_config    = $NDUMPER_LIB_CONSTRUCTOR['config'];
 
         // replace expanded collapsed default state
+        $expanded = self::_get('expanded');
         $replaceExpanded = array(
-            '{{hideShow}}' => ((self::$_config['expanded'])? 'block' : 'none'),
+            '{{hideShow}}' => ($expanded? 'block' : 'none'),
         );
         self::$_templates['global.js'] = strtr(self::$_templates['global.js'], $replaceExpanded);
         self::$_templates['global.styles'] = strtr(self::$_templates['global.styles'], $replaceExpanded);
@@ -140,6 +159,16 @@ class NDUMPER
         $name  = $traceArray['name'];
         $ids   = self::_getIds(true);
         $type  = gettype($value);
+        $size = 0;
+
+        if ($type == 'object') {
+            $classInfo = self::_getClassInfo($value);
+            $type .= ' = ' . $classInfo['fullName'] . ', methods=' . $classInfo['methodsAllCount'];
+            $size = 
+        }
+        if ($type == 'array'){
+            $size = count($value);
+        }
 
         $result2 = self::$_templates['global.block'];
         $result2 = strtr($result2, array(
@@ -147,10 +176,10 @@ class NDUMPER
             '{{linkId}}'  => $ids['link'],
             '{{name}}'    => $name,
             '{{type}}'    => $type,
-            '{{size}}'    => count($value),
+            '{{size}}'    => $size,
             '{{content}}' => self::_getVarContent($value, 0),
             '{{trace}}'   => $trace,
-            '{{char}}'    => (self::$_config['expanded']? '-' : '+'),
+            '{{char}}'    => ($expanded? '-' : '+'),
         ));
 
         $result .= $result2;
@@ -266,6 +295,34 @@ class NDUMPER
         return array('name' => $name, 'trace' => $trace_text);
     }
 
+    private static function _getClassInfo($object)
+    {
+        $result = array(
+            'smallName' => '',
+            'fullName' => '',
+            'methods' => '',
+            'methodsAllCount' => 0,
+        );
+        $className = get_class($object);
+        $result['fullName'] = $className;
+        if ($className!=='') {
+            $pos = strrpos($className, '\\');
+            if ($pos !== false) {
+                $result['smallName'] = substr($className, $pos + 1);
+            } else {
+                $result['smallName'] = $className;
+            }
+
+            $object = new ReflectionClass($className);
+            $result['methodsAllCount'] = count($object->getMethods());
+            foreach($object->getMethods() as $method) {
+                $result['methods'][] = $method->getName();
+            }
+        }
+
+
+        return $result;
+    }
 
     /**
      * Build one var block.
@@ -280,14 +337,14 @@ class NDUMPER
         $level2 = $level + 1;
 
         self::$_itemsCount++;
-        if (self::$_config['items.limit'] !== 0 && self::$_itemsCount > self::$_config['items.limit']) {
+        if (self::_get('items.limit') !== 0 && self::$_itemsCount > self::_get('items.limit')) {
             self::$_break = true;
-            $str .= '...items count limit (' . self::$_config['items.limit'] . ') reached...';
+            $str .= '...items count limit (' . self::_get('items.limit') . ') reached...';
             return $str;
         }
 
         // limit of recursion
-        if ($level > self::$_config['recursion.limit']) {
+        if ($level > self::_get('recursion.limit')) {
             $str .= '...(too deep)...';
             return $str;
         }
@@ -331,7 +388,7 @@ class NDUMPER
                     }
                     $str .= '<span class="s">'.$arr.'</span>';
                     $ids = self::_getIds(true);
-                    $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"> json data: <span id=\"{$ids['link']}\">[".((self::$_config['expanded'])? '-' : '+') . "]</span></a>\n";
+                    $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"> json data: <span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                     $str .= "<div id=\"{$ids['block']}\">";
                     foreach ($jsonArray as $key => $value) {
                         $str .= '<span class="k">'.$key.'</span>';
@@ -346,7 +403,7 @@ class NDUMPER
                         $title = '';
                         $value = $arr;
                         $ids = self::_getIds(true);
-                        $str .= "{ <a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\">{$title}<span id=\"{$ids['link']}\">[".((self::$_config['expanded'])? '-' : '+') . "]</span></a>\n";
+                        $str .= "{ <a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\">{$title}<span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                         $str .= "<div class=\"s\" id=\"{$ids['block']}\">" . $value . '</div>';
                         $str .= "}\n";
                     } else {
@@ -382,7 +439,7 @@ class NDUMPER
                 }
                 $str .= "{ ";
                 $ids = self::_getIds(true);
-                $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".((self::$_config['expanded'])? '-' : '+') . "]</span></a>\n";
+                $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                 $str .= "<div id=\"{$ids['block']}\">";
                 foreach ($arr as $key => $value) {
                     $str .= '<span class="k">'.$key.'</span>';
@@ -398,15 +455,19 @@ class NDUMPER
                 $objectVars = (array)$arr;
                 //print_r($objectVars);
                 $count = count($objectVars);
-                //echo $count; break;;
-                $str .= "<span class=\"o\">{$varType} [{$count}]</span> ";
+
+                //$classInfo = self::_getObjectStructure($arr);
+
+                $classInfo = self::_getClassInfo($arr);
+
+                $str .= "<span class=\"o\">{$varType} (<span title=\"{$classInfo['fullName']}\">{$classInfo['smallName']}</span>) [{$count}]</span> ";
                 if ($count === 0) {
                     $str .= self::$_templates['empty.value'];
                     break;
                 }
                 $str .= "{ ";
                 $ids = self::_getIds(true);
-                $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".((self::$_config['expanded'])? '-' : '+') . "]</span></a>\n";
+                $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                 $str .= "<div id=\"{$ids['block']}\">";
                 foreach ($objectVars as $key => $value) {
                     $str .= '<span class="ok">'.$key.'</span>';
@@ -416,7 +477,7 @@ class NDUMPER
                 }
                 $str .= "</div>";
                 $str .= "}\n";
-
+                //$str .= '<div>'.$classInfo.'</div>';
                 break;
 
             default: // "unknown type"
