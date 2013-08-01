@@ -228,7 +228,7 @@ class NDUMPER
 
             if (isset($fileContent[$lineNumber])) {
                 $line = $fileContent[$lineNumber];
-                preg_match("/vd[\s]{0,}\((.{0,})\)/i", $line, $matches);
+                preg_match("/vd[\s]{0,}\((.{0,})\)/Ui", $line, $matches);
                 if (isset($matches[1])) {
                     $arr = explode(',', $matches[1]);
                     if (count($arr) > 1 && isset($arr[$position])) {
