@@ -197,7 +197,7 @@ class NDUMPER
     private static function _getJson($string)
     {
         //TODO: modify for better performance
-        $data = json_decode($string);
+        $data = json_decode($string, true);
         $isJson = false;
         if (json_last_error() === JSON_ERROR_NONE && $data!=null && $data != $string) {
             $isJson = true;
@@ -313,11 +313,28 @@ class NDUMPER
                 $result['smallName'] = $className;
             }
 
-            $object = new ReflectionClass($className);
+            $reflectionObject = new ReflectionClass($className);
+            //$publicProperties = $object->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
+            $objectArray = (array)$object;
+            //var_dump($object->getProperties());
+            //var_dump(serialize($object));
+            foreach ($reflectionObject->getProperties() as $oneProperty) {
+                $name  = $oneProperty->getName();
+                $oneProperty->setAccessible(true);
+                $result['public-properties'][$name] = $oneProperty->getValue($object);
+            }
+            /*
+            if (!empty($publicProperties)) {
+                foreach($publicProperties as $property) {
+                    $result['public-properties'][] = $property;
+                }
+            }*/
+            /*
             $result['methodsAllCount'] = count($object->getMethods());
             foreach($object->getMethods() as $method) {
                 $result['methods'][] = $method->getName();
             }
+            */
         }
 
 
@@ -370,7 +387,7 @@ class NDUMPER
             case 'string':
                 $len = strlen($arr);
                 $jsonResult = self::_getJson($arr);
-
+                //print_r($jsonResult);
                 // Determine json data
                 $isJson = false;
                 if ($jsonResult['result'] === true) {
@@ -386,29 +403,31 @@ class NDUMPER
                         $str .= self::$_templates['empty.value'];
                         break;
                     }
-                    $str .= '<span class="s">'.$arr.'</span>';
+                    $str .= '<span class="s">'.htmlspecialchars($arr).'</span>';
                     $ids = self::_getIds(true);
-                    $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"> json data: <span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
+                    $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"> json data: <span id=\"".$ids['link']."\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                     $str .= "<div id=\"{$ids['block']}\">";
-                    foreach ($jsonArray as $key => $value) {
-                        $str .= '<span class="k">'.$key.'</span>';
-                        $str .= ' => ';
-                        $str .= self::_getVarContent($value, $level2) . "\n";
-                        if (self::$_break) break;
+                    if (is_array($jsonArray)) {
+                        foreach ($jsonArray as $key => $value) {
+                            $str .= '<span class="k">'.$key.'</span>';
+                            $str .= ' => ';
+                            $str .= self::_getVarContent($value, $level2) . "\n";
+                            if (self::$_break) break;
+                        }
                     }
                     $str .= "</div>";
                     $str .= "}";
                 } else {
                     if ($len > 155) {
-                        $title = '';
+                        $title = '...';
                         $value = $arr;
                         $ids = self::_getIds(true);
-                        $str .= "{ <a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\">{$title}<span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
-                        $str .= "<div class=\"s\" id=\"{$ids['block']}\">" . $value . '</div>';
+                        $str .= "{ <a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\">{$title}<span id=\"".$ids['link']."\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
+                        $str .= "<div class=\"s\" id=\"{$ids['block']}\">" . htmlspecialchars($value) . '</div>';
                         $str .= "}\n";
                     } else {
                         $value = str_replace("\n", '\n', $arr);
-                        $str .= "<span class=\"s\">{$value}</span>";
+                        $str .= "<span class=\"s\">".htmlspecialchars($value)."</span>";
                     }
                 }
                 break;
@@ -452,7 +471,8 @@ class NDUMPER
                 break;
 
             case 'object':
-                $objectVars = (array)$arr;
+                $objectVars = get_object_vars($arr);
+                //var_dump($objectVars);
                 //print_r($objectVars);
                 $count = count($objectVars);
 
@@ -469,12 +489,22 @@ class NDUMPER
                 $ids = self::_getIds(true);
                 $str .= "<a href=\"#\" onClick=\"return dshdbg('{$ids['block']}', '{$ids['link']}');\"><span id=\"{$ids['link']}\">[".((self::_get('expanded'))? '-' : '+') . "]</span></a>\n";
                 $str .= "<div id=\"{$ids['block']}\">";
+
+                foreach ($classInfo['public-properties'] AS $pName=>$pValue) {
+                    $str .= '<span class="ok">'.$pName.'</span>';
+                    $str .= ' => ';
+                    $str .= self::_getVarContent($pValue, $level2) . "\n";
+                    if (self::$_break) break;
+                }
+                /*
                 foreach ($objectVars as $key => $value) {
                     $str .= '<span class="ok">'.$key.'</span>';
                     $str .= ' => ';
                     $str .= self::_getVarContent($value, $level2) . "\n";
                     if (self::$_break) break;
                 }
+                */
+
                 $str .= "</div>";
                 $str .= "}\n";
                 //$str .= '<div>'.$classInfo.'</div>';
