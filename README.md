@@ -1,4 +1,4 @@
-var_dump2
+vd(...)
 =========
 
 Nice php var_dump library
